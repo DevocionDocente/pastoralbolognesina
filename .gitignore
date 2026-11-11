@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.env
+.env*.local
+*.log
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.source/
+
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+.source/
+/test-results/
+
+# Client source documents
+docs/*.docx
+docs/.~lock.*

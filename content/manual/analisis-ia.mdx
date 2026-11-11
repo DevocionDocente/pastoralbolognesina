@@ -1,0 +1,54 @@
+---
+title: Análisis con inteligencia artificial
+description: Qué entiende la IA de cada archivo, cómo ver su estado y qué hacer si falla.
+---
+
+Cada vez que subes una foto, un video, un documento o agregas un video de YouTube, el sistema lo **analiza automáticamente** con inteligencia artificial (OpenAI). No tienes que hacer nada: el análisis ocurre en segundo plano y puedes seguir trabajando.
+
+## Qué hace la IA con cada archivo
+
+| Archivo | Qué se analiza |
+| --- | --- |
+| **Fotos** | Qué se ve: personas, lo que hacen (danzas, procesiones, misas…), vestimenta, objetos, lugar y textos visibles. |
+| **Videos** | Lo que **se escucha** (se transcribe el audio) y lo que **se ve** (se describen escenas cada pocos segundos). También se genera su miniatura. |
+| **Videos de YouTube** | Su título, su descripción, su miniatura y, cuando YouTube lo permite, lo que se dice en el video (subtítulos o audio). |
+| **Documentos** | El texto de PDF, Word, Excel y PowerPoint. Los PDF escaneados también se leen. |
+
+Con eso se generan una **descripción** y **etiquetas** de cada archivo. En el siguiente hito, esto permitirá que las familias encuentren una foto escribiendo, por ejemplo, *danza*, aunque nadie haya escrito esa palabra.
+
+## Estado del análisis
+
+Cada archivo muestra una etiqueta con su estado. La página se actualiza sola mientras hay archivos pendientes.
+
+| Estado | Significado |
+| --- | --- |
+| **En cola** | El archivo espera su turno. |
+| **Analizando** | La IA lo está procesando. Un video de 30 minutos puede tardar varios minutos. |
+| **Analizado** | Listo. Ya forma parte de la búsqueda. |
+| **Error** | No se pudo analizar. Ver más abajo. |
+
+![Estados del análisis](/manual/analysis-in-progress.png)
+
+## Ver lo que entendió la IA
+
+Pulsa **⋮** sobre un archivo y elige **Ver análisis de IA**. Verás la descripción, las etiquetas y, según el tipo de archivo, lo que se ve en el video, lo que se escucha o el texto del documento.
+
+![Análisis de un video](/manual/analysis-dialog.png)
+
+## Resumen de la actividad
+
+Cuando sus archivos terminan de analizarse, la actividad recibe un **resumen generado con IA** de cómo se realizó. Este resumen también aparece en la galería pública y en la línea de tiempo de las actividades recurrentes, para comparar las ediciones de cada año.
+
+![Resumen generado con IA](/manual/activity-summary.png)
+
+<Callout type="info">
+  La IA solo describe lo que realmente aparece en los archivos. Por eso, cuantas más fotos y videos reales de la actividad se suban, mejor será el resumen.
+</Callout>
+
+## Si un archivo queda en error
+
+- Los errores temporales se **reintentan solos** varias veces.
+- Si el error persiste, abre **Ver análisis de IA** y pulsa **Volver a analizar**.
+- Si el mensaje dice que **la cuenta de OpenAI no tiene saldo**, pide a la responsable del sistema que recargue créditos y luego vuelve a analizar los archivos con error.
+- YouTube a veces bloquea la descarga automática de subtítulos y audio. En ese caso el video se analiza con su título, su descripción y su miniatura. Si el contenido hablado es importante, conviene **subir el video directamente** en lugar de enlazarlo.
+- Algunos formatos (por ejemplo, fotos HEIC de iPhone) pueden no ser compatibles con el análisis. El archivo igual se guarda y se muestra en la galería.

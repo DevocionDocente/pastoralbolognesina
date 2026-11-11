@@ -1,0 +1,95 @@
+---
+title: Guía de operación
+description: Cómo está desplegado el sistema en el servidor del colegio y cómo mantenerlo.
+---
+
+Esta guía es para la persona técnica que mantiene el sistema. Se completa a medida que se configura cada servicio.
+
+## Servidor
+
+| Dato | Valor |
+| --- | --- |
+| Proveedor | VPS con Dokploy (panel de despliegues) |
+| IP | `132.148.79.114` |
+| Panel Dokploy | `https://dokploy.pastoralbolognesina.com` |
+| Memoria | 1,9 GB de RAM + 4 GB de swap |
+| Proyecto en Dokploy | **pastoralbolognesina** → servicio compose **pastoralbolognesina** |
+
+<Callout type="warn">
+  Dokploy usa casi toda la RAM del servidor. El **swap de 4 GB es obligatorio**: sin él, compilar la aplicación agota la memoria y el servidor se reinicia, cancelando el despliegue. Ya está configurado en `/swapfile` y se activa solo al reiniciar (`/etc/fstab`).
+</Callout>
+
+Si algún día se reinstala el servidor, crea el swap antes del primer despliegue:
+
+```bash
+fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+sysctl vm.swappiness=10 && echo 'vm.swappiness=10' >> /etc/sysctl.d/99-swap.conf
+```
+
+## Servicios
+
+El sistema se despliega desde el repositorio de GitHub (rama `main`) con el archivo `docker-compose.prod.yml`, que levanta tres contenedores:
+
+| Servicio | Qué hace | Puerto interno |
+| --- | --- | --- |
+| `app` | Sitio público, panel, API y el procesador de análisis con IA | 3000 |
+| `postgres` | Base de datos (PostgreSQL 17 con `pgvector`) | 5432 |
+| `minio` | Almacenamiento de fotos, videos y documentos | 9000 |
+
+Al arrancar, la aplicación aplica sola las migraciones de la base de datos, crea el bucket de archivos y el administrador root si no existen.
+
+## Dominio y direcciones
+
+El dominio `pastoralbolognesina.com` está registrado en Namecheap. Sus registros DNS (*Advanced DNS*) apuntan a la VPS:
+
+| Tipo | Host | Valor | Uso |
+| --- | --- | --- | --- |
+| A | `@` | `132.148.79.114` | Sitio público y panel: `https://pastoralbolognesina.com` |
+| A | `www` | `132.148.79.114` | Redirige solo a `https://pastoralbolognesina.com` |
+| A | `files` | `132.148.79.114` | Archivos (MinIO): `https://files.pastoralbolognesina.com` |
+| A | `dokploy` | `132.148.79.114` | Panel de Dokploy: `https://dokploy.pastoralbolognesina.com` |
+
+En Dokploy, los dominios están en el compose **pastoralbolognesina** → **Domains**: la raíz y `www` hacia el servicio `app` (puerto `3000`) y `files` hacia `minio` (puerto `9000`), todos con HTTPS de Let's Encrypt, que se renueva solo.
+
+<Callout type="warn">
+  Si algún día cambia el dominio, actualiza también las variables `BETTER_AUTH_URL` y `S3_PUBLIC_ENDPOINT` y vuelve a desplegar. Si no coinciden con el dominio, el inicio de sesión o la subida de archivos fallan.
+</Callout>
+
+## Variables de entorno
+
+Se editan en Dokploy → compose **pastoralbolognesina** → **Environment**. Después de cambiar una variable hay que pulsar **Redeploy**.
+
+| Variable | Para qué sirve |
+| --- | --- |
+| `POSTGRES_PASSWORD` | Contraseña de la base de datos. No la cambies después del primer despliegue: la base ya fue creada con ella. |
+| `BETTER_AUTH_SECRET` | Firma las sesiones. Si cambia, todos deben volver a iniciar sesión. |
+| `BETTER_AUTH_URL` | Dirección pública del sitio. |
+| `ROOT_ADMIN_NAME`, `ROOT_ADMIN_EMAIL`, `ROOT_ADMIN_PASSWORD` | Administrador creado en el primer arranque. Cambiarlos después no modifica una cuenta ya creada. |
+| `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Credenciales del almacenamiento de archivos. |
+| `S3_PUBLIC_ENDPOINT` | Dirección pública de MinIO; el navegador sube y descarga archivos desde ahí. |
+| `OPENAI_API_KEY` | Clave de OpenAI para el análisis, la búsqueda inteligente y el perfil pastoral. Sin ella, los archivos se suben pero quedan **En cola**. |
+
+## Actualizar a una nueva versión
+
+1. Sube los cambios a la rama `main` del repositorio.
+2. En Dokploy, abre el compose y pulsa **Deploy**. La compilación tarda entre 10 y 20 minutos por el poco espacio de memoria.
+3. Si un análisis estaba en curso, se reanuda solo cuando la aplicación vuelve a arrancar.
+
+## Créditos de OpenAI
+
+El análisis con IA se paga por uso en [platform.openai.com](https://platform.openai.com). Si se acaban los créditos, el sitio sigue funcionando, pero los archivos nuevos quedan en error o en cola. Después de recargar, vuelve a analizar los archivos con error desde el panel (**⋮ → Ver análisis de IA → Volver a analizar**).
+
+## Respaldos
+
+<Callout type="warn">
+  **Pendiente de configurar.** Por ahora no hay copia automática: si la VPS falla, se pierden la base de datos y los archivos.
+</Callout>
+
+Para configurarlos en Dokploy:
+
+1. Crea un almacenamiento S3 externo a la VPS (por ejemplo, un bucket de Cloudflare R2 o Backblaze B2) con su clave de acceso.
+2. En Dokploy → **Settings → S3 Destinations**, agrega ese destino y pulsa **Test**.
+3. En el compose **pastoralbolognesina** → **Backups**, crea un respaldo de base de datos: servicio `postgres`, base `pastoral`, usuario `pastoral`, programación diaria (por ejemplo `0 3 * * *`) y conserva al menos 14 copias.
+4. En **Volume Backups**, crea un respaldo diario del volumen de `minio` hacia el mismo destino.
+5. Ejecuta cada respaldo una vez a mano y confirma que el archivo aparece en el bucket.

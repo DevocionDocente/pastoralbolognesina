@@ -1,0 +1,23 @@
+{
+  "title": "Manual de usuario",
+  "pages": [
+    "index",
+    "---Primeros pasos---",
+    "iniciar-sesion",
+    "solicitar-acceso",
+    "mi-cuenta",
+    "---Actividades---",
+    "registrar-actividad",
+    "agregar-archivos",
+    "analisis-ia",
+    "perfil-pastoral",
+    "publicar-actividad",
+    "galeria-publica",
+    "---Administración---",
+    "gestionar-usuarios",
+    "gestionar-roles",
+    "catalogo-virtudes",
+    "---Operación---",
+    "operations"
+  ]
+}
